@@ -10,6 +10,7 @@ const PORT = process.env.PORT || 3000
 // Configure custom ALTCHA_HMAC_KEY if not set in environment variables
 const ALTCHA_HMAC_KEY = process.env.ALTCHA_HMAC_KEY || randomBytes(16).toString('hex')
 const ALTCHA_MAX_NUMBER = process.env.ALTCHA_MAX_NUMBER || '50000'
+const count = 0;
  
 const app = new Hono()
  
@@ -34,10 +35,17 @@ app.get('/', (c) => {
  */
 app.get('/api/challenge', async (c) => {
   try {
+    if (count > (30000)) {
+        return c.json({
+        error: 'Too many requests',
+      }, 429)
+    }
+
     // Generate a new random challenge with a specified complexity
     const challenge = await createChallenge({
+      expires: new Date(Date.now() + 30000),
       hmacKey: ALTCHA_HMAC_KEY,
-      maxNumber: Number(ALTCHA_MAX_NUMBER)
+      maxnumber: Number(ALTCHA_HMAC_KEY) + ((Number(ALTCHA_HMAC_KEY) / 2) * count),
     })
 
     // Return the generated challenge as JSON
