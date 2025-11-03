@@ -3,40 +3,41 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { createChallenge, verifyFieldsHash, verifySolution, verifyServerSignature } from 'altcha-lib'
-
+ 
 // Server configuration
 const PORT = process.env.PORT || 3000
-
+ 
 // Configure custom ALTCHA_HMAC_KEY if not set in environment variables
 const ALTCHA_HMAC_KEY = process.env.ALTCHA_HMAC_KEY || randomBytes(16).toString('hex')
-
+const ALTCHA_MAX_NUMBER = process.env.ALTCHA_MAX_NUMBER || '50000'
+ 
 const app = new Hono()
-
+ 
 // Apply CORS middleware to all routes
 app.use('/*', cors())
-
+ 
 // Root endpoint providing information about available endpoints
 app.get('/', (c) => {
   return c.text([
-    'ALTCHA server demo endpoints:',
+    'ALTCHA server :',
     '',
-    'GET /altcha - use this endpoint as challengeurl for the widget',
-    'POST /submit - use this endpoint as the form action',
-    'POST /submit_spam_filter - use this endpoint for form submissions with spam filtering'
+    'GET /api/challenge - Challenge generation with paylaod',
+    'POST /api/verify - Check validation payload',
+    'GET /health - Check state altcha server'
   ].join('\n'))
 })
-
+ 
 /**
  * GET /altcha
- * 
+ *
  * Endpoint for fetching a new random challenge to be used by the ALTCHA widget
  */
-app.get('/altcha', async (c) => {
+app.get('/api/challenge', async (c) => {
   try {
     // Generate a new random challenge with a specified complexity
     const challenge = await createChallenge({
       hmacKey: ALTCHA_HMAC_KEY,
-      maxNumber: 50_000
+      maxNumber: Number(ALTCHA_MAX_NUMBER)
     })
 
     // Return the generated challenge as JSON
